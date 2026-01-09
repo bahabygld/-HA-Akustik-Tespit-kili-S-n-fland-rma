@@ -1,14 +1,12 @@
 %% test_balanced_v3_son_test_FINAL.m
 clc; clear;
 
-%% 1) PATHS
 rootTest = "C:\Users\baha_\OneDrive\Masaüstü\Yüksek Lisans\1.Sınıf 2.Dönem\İha Akustik ses\SON DENGELENMİŞ\BALANCED_V3_SON_TEST_FIXED";
 modelFile = "C:\Users\baha_\OneDrive\Masaüstü\Yüksek Lisans\1.Sınıf 2.Dönem\İha Akustik ses\MATLAB DATA\trainedModelV3_SON.mat";
 
 fprintf("Test klasoru  : %s\n", rootTest);
 fprintf("Model dosyasi : %s\n\n", modelFile);
 
-%% 2) LOAD MODEL
 S = load(modelFile);
 fn = fieldnames(S);
 mdl = S.(fn{1});
@@ -21,7 +19,6 @@ varNames = mdl.RequiredVariables;
 D_model  = numel(varNames);
 fprintf("Model %d ozellik bekliyor.\n\n", D_model);
 
-%% 3) DATASTORE
 ads = audioDatastore(rootTest, ...
     "IncludeSubfolders",true, ...
     "FileExtensions",".wav", ...
@@ -32,7 +29,6 @@ fprintf("Toplam test dosyasi: %d\n", n);
 
 yTrueFolder = ads.Labels;
 
-%% 4) Extract example feature
 ex = extract_drone_features(ads.Files{1});
 ex = ex(:).';
 D_feat = numel(ex);
@@ -44,7 +40,6 @@ if D_feat ~= D_model
         D_model, D_feat);
 end
 
-%% 5) Tum dosyalar icin ozellik cikar
 X = zeros(n, D_model, "single");
 valid = true(n,1);
 
@@ -73,26 +68,21 @@ for i = 2:n
     end
 end
 
-%% Temizle
 X = X(valid,:);
 yTrueFolder = yTrueFolder(valid);
 
 fprintf("\nGecerli ornek sayisi: %d\n\n", size(X,1));
 
-%% 6) Prediction table
 T_test = array2table(X, "VariableNames", varNames);
 
-%% Predicted labels
 yPred = mdl.predictFcn(T_test);
 if ~iscategorical(yPred)
     yPred = categorical(yPred);
 end
 
-%% True labels
 yTrue = categorical(repmat("neg",size(X,1),1), ["neg","pos"]);
 yTrue(string(yTrueFolder)=="1") = categorical("pos",["neg","pos"]);
 
-%% 7) CONFUSION MATRIX
 order = categorical(["neg","pos"],["neg","pos"]);
 cm = confusionmat(yTrue, yPred, "Order", order);
 
@@ -112,7 +102,6 @@ fprintf("Accuracy  : %.2f %%\n", acc*100);
 fprintf("Sensitivity (pos): %.2f %%\n", sens*100);
 fprintf("Specificity (neg): %.2f %%\n\n", spec*100);
 
-%% ---- Confusion Chart ----
 figure;
 confusionchart(yTrue, yPred, ...
     'RowSummary','row-normalized', ...
@@ -121,14 +110,11 @@ title("Confusion Matrix (Normalized)");
 ylabel("True Class");
 xlabel("Predicted Class");
 
-%% 8) ROC CURVE - sade ve doğru hali
-
 if isempty(scores)
     warning("Skor bulunamadi! ROC hesabi atlandi.");
     return;
 end
 
-% Pozitif sınıf 'pos' için kolon seç
 cls = string(subModel.ClassNames);
 posCol = find(cls=="pos",1);
 if isempty(posCol)
@@ -150,3 +136,4 @@ grid on;
 xlabel("False Positive Rate");
 ylabel("True Positive Rate");
 title(sprintf("ROC Curve (AUC = %.4f)", AUC));
+
