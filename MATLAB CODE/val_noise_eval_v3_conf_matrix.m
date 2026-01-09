@@ -1,9 +1,4 @@
-% ===== val_noise_eval_v3_export_cm.m =====
-% Her SNR için confusion matrix'i figür olarak açar ve PNG kaydeder.
-
 clear; clc; close all;
-
-%% === PARAMETRELER ===
 root = "C:\Users\baha_\OneDrive\Masaüstü\Yüksek Lisans\1.Sınıf 2.Dönem\İha Akustik ses\SON DENGELENMİŞ\BALANCED_V3_SON_TEST_FIXED";
 valPosDir = fullfile(root,"1");
 valNegDir = fullfile(root,"0");
@@ -15,24 +10,17 @@ winDur   = 0.025;
 hopDur   = 0.010;
 
 snrList = [20 15 10 5];  % Bildiri için 4 senaryo
-
-% === MODEL DOSYASI (burayı kendi dosyanla doldur) ===
 modelPath = "C:\Users\baha_\OneDrive\Masaüstü\Yüksek Lisans\1.Sınıf 2.Dönem\İha Akustik ses\MATLAB DATA\trainedModelV3_SON.mat";  % <-- DÜZELT
-
-% === ÇIKTI KLASÖRÜ ===
 outDir = fullfile(root, "OUT_SNR_CM");
 if ~exist(outDir, "dir"), mkdir(outDir); end
 
-%% === MODELİ YÜKLE ===
 S = load(modelPath);
 mfn = string(fieldnames(S));
 mdl = S.(mfn(1));
 fprintf('Seçilen model: %s\n', mfn(1));
 
-%% (İSTEĞE BAĞLI) Segment seçimini sabitlemek için:
 % rng(0);  % her çalıştırmada aynı kırpma olsun
 
-%% === HER SNR İÇİN TEST + FIGURE KAYIT ===
 order = categorical({'neg','pos'});
 
 for snrDB = snrList
@@ -61,23 +49,19 @@ for snrDB = snrList
     rec  = tp / (tp+fn + eps);
     F1   = 2*prec*rec / (prec+rec + eps);
 
-    % --- Komut penceresine bas ---
     disp(array2table(cm,'VariableNames',{'pred_neg','pred_pos'}, ...
                         'RowNames',{'true_neg','true_pos'}));
     fprintf('Acc=%.3f  Prec=%.3f  Rec=%.3f  F1=%.3f  (n=%d)\n', acc, prec, rec, F1, N);
 
-    % --- FIGURE: confusionchart ---
     fig = figure('Visible','on'); %#ok<NASGU>
     cc = confusionchart(cm, {'neg','pos'});
     cc.Title = sprintf('Confusion Matrix (SNR = %d dB)', snrDB);
     cc.RowSummary = 'row-normalized';
     cc.ColumnSummary = 'column-normalized';
 
-    % PNG kaydet
     pngName = fullfile(outDir, sprintf("Fig_SNR_%ddB_CM.png", snrDB));
     exportgraphics(gcf, pngName, 'Resolution', 300);
 
-    % İstersen FIG olarak da kaydet
     figName = fullfile(outDir, sprintf("Fig_SNR_%ddB_CM.fig", snrDB));
     savefig(gcf, figName);
 
@@ -87,8 +71,6 @@ end
 fprintf('\nBitti. Görseller: %s\n', outDir);
 
 return;
-
-%% ======================= LOCAL FONKSİYONLAR =======================
 
 function T = build_noisy_val_table(valPosDir, valNegDir, snrDB, ...
                                    srTarget, NUM_MFCC, NUM_MEL, winDur, hopDur)
@@ -188,3 +170,4 @@ function feat = extract_feats(x, fs, NUM_MFCC, NUM_MEL, winDur, hopDur)
 
     feat = [mf_m, mf_s, ml_m, ml_s, zcr, rv, sc];
 end
+
