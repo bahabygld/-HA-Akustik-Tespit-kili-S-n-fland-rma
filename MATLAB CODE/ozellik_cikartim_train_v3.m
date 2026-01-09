@@ -36,8 +36,6 @@ fprintf("Kaydedildi: %s\n", fullfile(root, "T_train_cl.mat"));
 
 return;
 
-%% ============================ LOCAL FUNCTION =============================
-
 function T = extract_features_from_folder(folderPath, labelStr, srTarget, NUM_MFCC, NUM_MEL, winDur, hopDur)
     ads = audioDatastore(folderPath, 'IncludeSubfolders', false, 'FileExtensions', '.wav');
     n   = numel(ads.Files);
@@ -102,13 +100,11 @@ function x = unit_peak(x)
 end
 
 function feat = extract_157d(x, fs, NUM_MFCC, NUM_MEL, winDur, hopDur)
-    % MFCC
     C = mfcc(x, fs, 'NumCoeffs', NUM_MFCC);
     if size(C,1)<size(C,2), C = C.'; end
     mf_m = mean(C,1);
     mf_s = std(C,0,1);
 
-    % log-Mel
     wl  = max(32, round(winDur*fs));
     hl  = max(16, round(hopDur*fs));
     win = hamming(wl, 'periodic');
@@ -117,11 +113,11 @@ function feat = extract_157d(x, fs, NUM_MFCC, NUM_MEL, winDur, hopDur)
     Slog = log10(S + 1e-12);
     ml_m = mean(Slog,2).';
     ml_s = std(Slog,0,2).';
-
-    % ZCR / RMS / Spectral centroid
+    
     zcr = mean(zerocrossrate(x));
     rv  = rms(x);
     sc  = mean(spectralCentroid(x,fs));
 
     feat = [mf_m, mf_s, ml_m, ml_s, zcr, rv, sc];
 end
+
